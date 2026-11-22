@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+# ZETA OSINT - Uso ético y legal únicamente
+import phonenumbers
+from phonenumbers import geocoder, carrier, timezone, number_type, PhoneNumberType
+import requests
+import os
+import sys
+import random
+import time
+from colorama import Fore, Style, init
+
+init(autoreset=True)
+
+NUMVERIFY_KEY = os.getenv("NUMVERIFY_KEY", "")
+ABSTRACT_KEY  = os.getenv("ABSTRACT_KEY", "")
+
+# ─────────── CALAVERA ───────────
+SKULL = r"""
+                 .ed"""" """$$$$be.
+               -"           ^""**$$$e.
+             ."                   '$$$c
+            /                      "4$$b
+           d  3                      $$$$
+           $  *                   .$$$$$$
+          .$  ^c           $$$$$e$$$$$$$$.
+          d$L  4.         4$$$$$$$$$$$$$$b
+          $$$$b ^ceeeee.  4$$ECL.F*$$$$$$$
+          $$$$P d$$$$F $ $$$$$$$$$- $$$$$$
+          3$$$F "$$$$b   $"$$$$$$$  $$$$*"
+           $$P"  "$$b   .$ $$$$$...e$$
+            *c    ..    $$ 3$$$$$$$$$$$$eF
+              %ce""    $$$  $$$$$$$$$$$$$$*
+               *$e.    *** d$$$$$"L$$$$$$$$  *
+                $$$      4J$$$$$% $$$ $$$$$$$$
+               $"'$=e....$*$$**$cz$$" "$$$*
+               $  *=%4.$ L L$ P3$$ $F $$$P"
+               "$   "%*ebJLzb$e$$$$$b $P"
+                 %..      4$$$$$$$$$$ "
+                  $$$e   z$$$$$$$$$$%
+                   "*$c  "$$$$$$$$$P"
+                    .-"    "*$$$$$*"
+                   ."    .    "$$*"
+"""
+
+ZETA = r"""
+███████╗███████╗████████╗ █████╗ 
+╚══███╔╝██╔════╝╚══██╔══╝██╔══██╗
+  ███╔╝ █████╗     ██║   ███████║
+ ███╔╝  ██╔══╝     ██║   ██╔══██║
+███████╗███████╗   ██║   ██║  ██║
+╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
+"""
+
+def mostrar_banner():
+    os.system("clear")
+    print(Fore.RED + SKULL + Style.RESET_ALL)
+    print(Fore.WHITE + ZETA + Style.RESET_ALL)
+    print(Fore.WHITE + "        Ingresa el número celular" + Style.RESET_ALL)
+    print(Fore.WHITE + "                 ▼" + Style.RESET_ALL)
+
+# ─────────── EFECTO HACKER ───────────
+def efecto_hacker(segundos=3):
+    chars = "0123456789abcdefABCDEF!@#$%&*<>/?\\|[]{}=+-_"
+    fin = time.time() + segundos
+    try:
+        while time.time() < fin:
+            linea = "".join(random.choice(chars) for _ in range(random.randint(20, 60)))
+            color = random.choice([Fore.GREEN, Fore.CYAN, Fore.WHITE])
+            print(color + linea + Style.RESET_ALL)
+            time.sleep(0.05)
+    except KeyboardInterrupt:
+        pass
+
+def barra_carga(texto="Recopilando información", duracion=4):
+    total = 40
+    print()
+    for i in range(total + 1):
+        pct = int((i / total) * 100)
+        lleno = "█" * i
+        vacio = "░" * (total - i)
+        sys.stdout.write(f"\r{Fore.GREEN}{texto}... [{lleno}{vacio}] {pct}%{Style.RESET_ALL}")
+        sys.stdout.flush()
+        time.sleep(duracion / total)
+    print()
+
+# ─────────── ANÁLISIS ───────────
+def tipo_numero(p):
+    tipos = {
+        PhoneNumberType.MOBILE: "Móvil",
+        PhoneNumberType.FIXED_LINE: "Fijo",
+        PhoneNumberType.FIXED_LINE_OR_MOBILE: "Fijo o móvil",
+        PhoneNumberType.TOLL_FREE: "Gratuito",
+        PhoneNumberType.PREMIUM_RATE: "Premium",
+        PhoneNumberType.VOIP: "VoIP",
+        PhoneNumberType.SHARED_COST: "Costo compartido",
+        PhoneNumberType.PERSONAL_NUMBER: "Personal",
+        PhoneNumberType.PAGER: "Pager",
+        PhoneNumberType.UAN: "UAN",
+        PhoneNumberType.VOICEMAIL: "Voicemail",
+        PhoneNumberType.UNKNOWN: "Desconocido",
+    }
+    return tipos.get(number_type(p), "Desconocido")
+
+def info_local(numero):
+    print(f"\n{Fore.YELLOW}╔══════════ RESULTADOS ══════════╗{Style.RESET_ALL}")
+    try:
+        p = phonenumbers.parse(numero, None)
+    except Exception as e:
+        print(f"{Fore.RED}[!] Error al parsear: {e}{Style.RESET_ALL}")
+        return None
+
+    if not phonenumbers.is_valid_number(p):
+        print(f"{Fore.RED}[!] Número inválido{Style.RESET_ALL}")
+        return None
+
+    print(f"{Fore.GREEN}  ✓ Número válido{Style.RESET_ALL}")
+    print(f"  País:          {geocoder.description_for_number(p, 'es')}")
+    print(f"  Región:        {phonenumbers.region_code_for_number(p)}")
+    print(f"  Carrier:       {carrier.name_for_number(p, 'es') or 'Desconocido'}")
+    print(f"  Tipo:          {tipo_numero(p)}")
+    print(f"  Zona horaria:  {', '.join(timezone.time_zones_for_number(p))}")
+    print(f"  E164:          {phonenumbers.format_number(p, phonenumbers.PhoneNumberFormat.E164)}")
+    print(f"  Internacional: {phonenumbers.format_number(p, phonenumbers.PhoneNumberFormat.INTERNATIONAL)}")
+    print(f"  Nacional:      {phonenumbers.format_number(p, phonenumbers.PhoneNumberFormat.NATIONAL)}")
+    print(f"  Posible:       {'Sí' if phonenumbers.is_possible_number(p) else 'No'}")
+    print(f"{Fore.YELLOW}╚════════════════════════════════╝{Style.RESET_ALL}")
+    return p
+
+def consultar_numverify(numero):
+    if not NUMVERIFY_KEY:
+        print(f"{Fore.MAGENTA}[i] Numverify omitido (sin API key){Style.RESET_ALL}")
+        return
+    print(f"\n{Fore.YELLOW}[*] Numverify{Style.RESET_ALL}")
+    try:
+        r = requests.get("http://apilayer.net/api/validate",
+                         params={"access_key": NUMVERIFY_KEY, "number": numero},
+                         timeout=10).json()
+        if r.get("valid"):
+            print(f"  Local:     {r.get('local_format')}")
+            print(f"  País:      {r.get('country_name')} ({r.get('country_code')})")
+            print(f"  Ubicación: {r.get('location')}")
+            print(f"  Carrier:   {r.get('carrier')}")
+            print(f"  Línea:     {r.get('line_type')}")
+        else:
+            print(f"{Fore.RED}  [!] No válido o error: {r.get('error', {})}{Style.RESET_ALL}")
+    except Exception as e:
+        print(f"{Fore.RED}  [!] Error: {e}{Style.RESET_ALL}")
+
+def consultar_abstract(numero):
+    if not ABSTRACT_KEY:
+        print(f"{Fore.MAGENTA}[i] AbstractAPI omitido (sin API key){Style.RESET_ALL}")
+        return
+    print(f"\n{Fore.YELLOW}[*] AbstractAPI{Style.RESET_ALL}")
+    try:
+        r = requests.get("https://phonevalidation.abstractapi.com/v1/",
+                         params={"api_key": ABSTRACT_KEY, "phone": numero},
+                         timeout=10).json()
+        if "phone" in r:
+            print(f"  Formato:   {r.get('format', {}).get('international')}")
+            print(f"  País:      {r.get('country', {}).get('name')}")
+            print(f"  Ubicación: {r.get('location')}")
+            print(f"  Carrier:   {r.get('carrier')}")
+            print(f"  Tipo:      {r.get('type')}")
+        else:
+            print(f"{Fore.RED}  [!] Error: {r}{Style.RESET_ALL}")
+    except Exception as e:
+        print(f"{Fore.RED}  [!] Error: {e}{Style.RESET_ALL}")
+
+# ─────────── MAIN ───────────
+def main():
+    mostrar_banner()
+    numero = input(f"{Fore.WHITE}  ➤ {Style.RESET_ALL}").strip()
+    if not numero:
+        print(f"{Fore.RED}[!] Debes ingresar un número{Style.RESET_ALL}")
+        return
+
+    print(f"\n{Fore.GREEN}[*] Iniciando escaneo OSINT...{Style.RESET_ALL}\n")
+    efecto_hacker(segundos=3)
+    barra_carga("Analizando número", duracion=4)
+
+    p = info_local(numero)
+    if not p:
+        return
+
+    consultar_numverify(numero)
+    consultar_abstract(numero)
+
+    print(f"\n{Fore.CYAN}[✓] Análisis completado{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}Nota: ubicación exacta y nombre del titular requieren orden judicial.{Style.RESET_ALL}")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(f"\n{Fore.RED}Cancelado{Style.RESET_ALL}")
+        sys.exit(0)
